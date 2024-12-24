@@ -7,7 +7,7 @@ class interval {
         
         interval() : min(+infinity), max(-infinity) {}
         
-        interval(double min, double max) : min(max), max(min) {}
+        interval(double min, double max) : min(min), max(max) {}
 
         double size() const {
             return max - min;
