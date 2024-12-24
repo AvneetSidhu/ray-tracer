@@ -9,7 +9,7 @@ double hit_sphere(const point3& centre, double radius, const ray& r) {
     auto a = r.direction().length_squared();
     auto h = dot(r.direction(), oc);
     auto c = oc.length_squared() - radius*radius;
-    auto discriminant = h*h - a*c;
+    auto discriminant = h*h - a*c; 
     
     if (discriminant < 0) {
         return -1.0;
@@ -19,10 +19,10 @@ double hit_sphere(const point3& centre, double radius, const ray& r) {
 }
 
 color ray_color(const ray& r) {
-    auto t = hit_sphere(point3(0,0,-1), 0.5, r);
+    auto t = hit_sphere(point3(0,0,-1), 0.5, r); // scalar which tells us where along the ray the hit occurs if it happens
 
     if (t > 0.0) {
-        vec3 N = unit_vector(r.at(t) - vec3(0,0,-1));
+        vec3 N = unit_vector(r.at(t) - vec3(0,0,-1)); //find point at which intersection / hit occurs
         return 0.5*color(N.x()+1, N.y()+1, N.z()+1);
     }
 
