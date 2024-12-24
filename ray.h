@@ -1,5 +1,5 @@
-ifndef RAY_H
-define RAY_H
+#ifndef RAY_H
+#define RAY_H
 
 #include "vec3.h"
 // represents points on a ray using the function P(t) = origin + tb, where P(t) is the point in a ray , t is a scalar representing position on the ray and b is the direction vector
@@ -20,4 +20,6 @@ class ray {
         private:
         point3 orig;
         vec3 dir;
-}
+};
+
+#endif
