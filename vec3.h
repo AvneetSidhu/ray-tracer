@@ -1,8 +1,7 @@
 #if !defined(VEC_3)
 #define VEC_3
 
-#include <cmath>
-#include <iostream>
+#include "constants.h"
 
 class vec3 {
     public: 

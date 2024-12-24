@@ -3,7 +3,7 @@
 
 #include "vec3.h"
 
-#include <iostream >
+#include "constants.h"
 
 using color = vec3;
 
