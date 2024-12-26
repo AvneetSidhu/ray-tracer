@@ -9,6 +9,11 @@ class camera {
         int image_width = 100;
         int samples_per_pixel = 10;
         int max_depth = 10;
+        double vfov = 90;
+
+        point3 lookfrom = point3(0,0,0);
+        point3 lookat = point3(0,0,-1);
+        vec3 vup = vec3(0,1,0);
 
         void render(const hittable& world) {
             initialize();
@@ -36,27 +41,34 @@ class camera {
         point3 pixel00_loc;
         vec3   pixel_delta_u; 
         vec3   pixel_delta_v;
+        vec3 u, v, w;
 
         void initialize() {
             image_height = int(image_width / aspect_ratio);
             image_height = (image_height < 1) ? 1 : image_height;
 
-            auto focal_length = 1.0;
-            auto viewport_height = 2.0;
+            auto focal_length = (lookfrom - lookat).length();
+            auto theta = degrees_to_radians(vfov);
+            auto h = std::tan(theta / 2);
+            auto viewport_height = 2 * h * focal_length;
             auto viewport_width = viewport_height * (double (image_width) / image_height);
 
             pixel_samples_scale = 1.0 / samples_per_pixel;
 
-            center = point3(0,0,0);
+            center = lookfrom;
+
+            w = unit_vector(lookfrom - lookat);
+            u = unit_vector(cross(vup, w));
+            v = cross(w, u);
 
             //vectors to map 3d plane to 2d
-            auto viewport_u = vec3(viewport_width, 0, 0); //map eye coordinates to viewport 
-            auto viewport_v = vec3(0,-viewport_height, 0); //map eye coordinates to viewport (invert y axis)
+            auto viewport_u = viewport_width * u; //map eye coordinates to viewport 
+            auto viewport_v = viewport_height * -v; //map eye coordinates to viewport (invert y axis)
 
             pixel_delta_u = viewport_u / image_width; // inter-pixel distance u
             pixel_delta_v = viewport_v / image_height; // inter-pixel distance v 
 
-            auto viewport_upper_left = center - vec3(0,0,focal_length) - viewport_u/2 - viewport_v/2; // vector for the upper left corner of the viewport
+            auto viewport_upper_left = center - (focal_length * w) - viewport_u/2 - viewport_v/2; // vector for the upper left corner of the viewport
             pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v); // vector for the (0,0) pixel of the viewport centre
 
         }
