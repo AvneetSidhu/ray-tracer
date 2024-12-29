@@ -30,15 +30,33 @@ class image_buffer {
             buffer[i][j] = c;
         }
 
-        bool write_to_ppm(){
+        void write_to_ppm() {
             std::ofstream out("image.ppm");
 
+            // Write PPM header
+            out << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+
+            // Loop through the buffer and write pixel data
             for (int j = 0; j < image_height; j++) {
                 for (int i = 0; i < image_width; i++) {
-                    out << buffer[j][i].e[0] << ' ' << buffer[j][i].e[1] << ' ' << buffer[j][i].e[2] << '\n';
+
+                    color& pixel = buffer[j][i];
+
+                    
+                    int r = pixel.e[0]; 
+                    int g = pixel.e[1];
+                    int b = pixel.e[2];
+
+
+                    out << r << ' ' << g << ' ' << b << '\n';
                 }
             }
+
+            // Close the file
+            out.close();
+            std::cout << "Image written to image.ppm\n";
         }
+
 
 };
 

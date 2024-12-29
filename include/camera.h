@@ -3,6 +3,7 @@
 
 #include "hittable.h"
 #include "material.h"
+#include <iostream>
 #include <thread>
 #include "image_buffer.h"
 class camera {
@@ -20,22 +21,57 @@ class camera {
         double defocus_angle = 0;
         double focus_dist = 10;
 
-        void render(const hittable& world) {
+        void render(const hittable& world, int samples_per_pixel, int max_depth, int pixel_samples_scale) {
             initialize();
             std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
             image_buffer image(image_height, image_width);
-
             std::vector<std::thread> threads;
+            int start_row = 0;
+            int end_row;
+
+            std::cout << "number of threads: " << num_threads << '\n';
 
             for (int i = 0; i < num_threads; ++i) {
                 start_row = i * rows_per_thread;
-                end_row = (i == num_threads - 1) ? image_height : (i + 1) * rows_per_thread; 
-                threads.push_back(std::thread(render_chunk, start_row, end_row, std::ref(image), std::ref(world), samples_per_pixel, max_depth, pixel_samples_scale));
+                end_row = start_row + rows_per_thread;
+                if (i == num_threads - 1) {
+                    end_row += remainder; // Last thread takes the remaining rows
+                }
+                std::cout << "start " << start_row << " end " << end_row << '\n' << std::flush;
+                if (start_row < end_row) {
+                    try {
+                        threads.push_back(std::thread([this, start_row, end_row, &image, &world, samples_per_pixel, max_depth, pixel_samples_scale]() {
+                            try {
+                                render_chunk(start_row, end_row, image, world, samples_per_pixel, max_depth, pixel_samples_scale);
+                            } catch (const std::exception& e) {
+                                std::cerr << "Exception in thread " << std::this_thread::get_id() << ": " << e.what() << '\n';
+                            }
+                        }));
+
+                        std::cout << "Thread " << i << " added to the vector.\n";
+                    } catch (const std::exception& e) {
+                        std::cerr << "Error creating thread " << i << ": " << e.what() << '\n';
+                        return; // Exit the function if thread creation fails
+                    }
+                    
+                } else {
+                    std::cerr << "Invalid range for thread " << i << ": start_row = " << start_row << ", end_row = " << end_row << '\n';
+                    return;
+                }
+                std::cout << "Thread " << i << " added to the vector.\n" << std::flush;
             }
+
+            std::cout << "time to execute threads \n";
 
             for (auto& t : threads) {
                 t.join();
+            }
+
+            for (int i = 0 ; i < image_height; ++i) {
+                for (int j = 0; j < image_width; ++j){
+                    std::cout << image.buffer[i][j].e[0] << ' ' << image.buffer[i][j].e[1] << ' ' << image.buffer[i][j].e[2] << '\n';
+                }
             }
 
             image.write_to_ppm();
@@ -57,8 +93,6 @@ class camera {
         unsigned int num_threads;
         int rows_per_thread;
         int remainder;
-        int start_row = 0;
-        int end_row;
 
         void initialize() {
             image_height = int(image_width / aspect_ratio);
@@ -71,14 +105,11 @@ class camera {
             auto viewport_width = viewport_height * (double (image_width) / image_height);
 
             num_threads = std::thread::hardware_concurrency();
-            if (num_threads == 0) {
-                num_threads = 1; 
-            }
 
             rows_per_thread = image_height / num_threads;
             remainder = image_height % rows_per_thread; 
 
-            std::cout << "Using" << num_threads << " threads";
+            std::cout << "Using " << num_threads << " threads \n";
 
             pixel_samples_scale = 1.0 / samples_per_pixel;
 
@@ -143,10 +174,8 @@ class camera {
             return (1.0 - a)*color(1.0,1.0,1.0) + a*color(0.5,0.7,1.0);
         }
 
-        void render_chunk(int start, int end, image_buffer& img, const hittable_list& world, int samples_per_pixel, int max_depth, int pixel_samples_scale) {
+        void render_chunk(int start, int end, image_buffer& img, const hittable& world, int samples_per_pixel, int max_depth, int pixel_samples_scale) {
             for (int j = start; j < end; j ++) {
-                std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
-
                 for (int i = 0; i < image_width; i++ ) {
                     color pixel_color(0,0,0);
                     for (int sample = 0; sample < samples_per_pixel; sample++) {
