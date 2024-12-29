@@ -53,8 +53,8 @@ int main() {
     camera cam;
 
     cam.aspect_ratio      = 16.0 / 9.0;
-    cam.image_width       = 500;
-    cam.samples_per_pixel = 10;
+    cam.image_width       = 400;
+    cam.samples_per_pixel = 500;
     cam.max_depth         = 50;
 
     cam.vfov     = 20;
@@ -65,5 +65,5 @@ int main() {
     cam.defocus_angle = 0.6;
     cam.focus_dist    = 10.0;
 
-    cam.render(world, 10, 50, 1.0 / 10);
+    cam.render(world, 50, 50);
 }

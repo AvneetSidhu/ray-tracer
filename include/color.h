@@ -31,7 +31,6 @@ color write_color(const color& pixel_color) {
     int gbyte = int(256 * intensity.clamp(g));
     int bbyte = int(256 * intensity.clamp(b));
 
-    // out << rbyte << ' ' << gbyte << ' ' << bbyte << '\n';
     return color(rbyte, gbyte, bbyte);
 }
 #endif
