@@ -3,6 +3,8 @@
 
 #include "hittable.h"
 #include "material.h"
+#include <thread>
+#include "image_buffer.h"
 class camera {
     public:
         double aspect_ratio = 1.0;
@@ -22,15 +24,20 @@ class camera {
             initialize();
             std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
+            image_buffer image;
+
+            std::vector<std::thread> threads;
+
             for (int j = 0; j < image_height; j ++) {
                 std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
+
                 for (int i = 0; i < image_width; i++ ) {
                     color pixel_color(0,0,0);
                     for (int sample = 0; sample < samples_per_pixel; sample++) {
                         ray r = get_ray(i,j);
                         pixel_color += ray_color(r,max_depth, world);
                     }
-                    write_color(std::cout, pixel_samples_scale * pixel_color);
+                    image.set_pixel(i, j, write_color(pixel_samples_scale * pixel_color));
                 }
             }
             std::clog << "\rDone.                          \n";
@@ -47,6 +54,9 @@ class camera {
         vec3 u, v, w;
         vec3 defocus_disk_u;
         vec3 defocus_disk_v;
+        unsigned int num_threads;
+        int rows_per_thread;
+        int remainder;
 
         void initialize() {
             image_height = int(image_width / aspect_ratio);
@@ -57,6 +67,16 @@ class camera {
             auto h = std::tan(theta / 2);
             auto viewport_height = 2 * h * focus_dist;
             auto viewport_width = viewport_height * (double (image_width) / image_height);
+
+            num_threads = std::thread::hardware_concurrency();
+            if (num_threads == 0) {
+                num_threads = 1; 
+            }
+
+            rows_per_thread = image_height / num_threads;
+            remainder = image_height % rows_per_thread; 
+
+            std::cout << "Using" << num_threads << " threads";
 
             pixel_samples_scale = 1.0 / samples_per_pixel;
 
