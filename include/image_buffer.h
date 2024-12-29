@@ -26,7 +26,7 @@ class image_buffer {
             buffer[i][j] = c;
         }
 
-        void write_to_ppm(){
+        bool write_to_ppm(){
             return true;
         }
 
