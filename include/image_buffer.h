@@ -2,16 +2,18 @@
 #define IMAGE_BUFFER_H
 
 #include "vec3.h"
+#include "color.h"
+#include <vector>
 // represents points on a ray using the function P(t) = origin + tb, where P(t) is the point in a ray , t is a scalar representing position on the ray and b is the direction vector
 // direction vector is dir = target - origin
 class image_buffer {
     public: 
-        static const int image_width = 800;
-        static const int image_height = 600;
+        int image_height; 
+        int image_width;
 
-        std::array<std::array<color, image_width>, image_height> buffer;
+        std::vector<std::vector<color>>buffer;
 
-        image_buffer () {
+        image_buffer (int height, int width) {
             for (int i = 0; i < image_height; ++i) {
                 for (int j = 0; j < image_width; ++j) {
                     buffer[i][j] = color(0.0,0.0,0.0);

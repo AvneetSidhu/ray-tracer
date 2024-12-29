@@ -24,22 +24,22 @@ class camera {
             initialize();
             std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
-            image_buffer image;
+            image_buffer image(image_height, image_width);
 
             std::vector<std::thread> threads;
 
-            for (int j = 0; j < image_height; j ++) {
-                std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
-
-                for (int i = 0; i < image_width; i++ ) {
-                    color pixel_color(0,0,0);
-                    for (int sample = 0; sample < samples_per_pixel; sample++) {
-                        ray r = get_ray(i,j);
-                        pixel_color += ray_color(r,max_depth, world);
-                    }
-                    image.set_pixel(i, j, write_color(pixel_samples_scale * pixel_color));
-                }
+            for (int i = 0; i < num_threads; ++i) {
+                start_row = i * rows_per_thread;
+                end_row = (i == num_threads - 1) ? image_height : (i + 1) * rows_per_thread; 
+                threads.push_back(std::thread(render_chunk, start_row, end_row, std::ref(image), std::ref(world), samples_per_pixel, max_depth, pixel_samples_scale));
             }
+
+            for (auto& t : threads) {
+                t.join();
+            }
+
+            image.write_to_ppm();
+
             std::clog << "\rDone.                          \n";
         }
     
@@ -57,6 +57,8 @@ class camera {
         unsigned int num_threads;
         int rows_per_thread;
         int remainder;
+        int start_row = 0;
+        int end_row;
 
         void initialize() {
             image_height = int(image_width / aspect_ratio);
@@ -139,6 +141,21 @@ class camera {
             vec3 unit_direction = unit_vector(r.direction());
             auto a = 0.5 * (unit_direction.y() + 1.0);
             return (1.0 - a)*color(1.0,1.0,1.0) + a*color(0.5,0.7,1.0);
+        }
+
+        void render_chunk(int start, int end, image_buffer& img, const hittable_list& world, int samples_per_pixel, int max_depth, int pixel_samples_scale) {
+            for (int j = start; j < end; j ++) {
+                std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
+
+                for (int i = 0; i < image_width; i++ ) {
+                    color pixel_color(0,0,0);
+                    for (int sample = 0; sample < samples_per_pixel; sample++) {
+                        ray r = get_ray(i,j);
+                        pixel_color += ray_color(r,max_depth, world);
+                    }
+                    img.set_pixel(i, j, write_color(pixel_samples_scale * pixel_color));
+                }
+            }
         }
 };
 
