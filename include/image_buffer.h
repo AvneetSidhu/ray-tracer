@@ -4,6 +4,8 @@
 #include "vec3.h"
 #include "color.h"
 #include <vector>
+#include <fstream> 
+
 // represents points on a ray using the function P(t) = origin + tb, where P(t) is the point in a ray , t is a scalar representing position on the ray and b is the direction vector
 // direction vector is dir = target - origin
 class image_buffer {
@@ -29,7 +31,13 @@ class image_buffer {
         }
 
         bool write_to_ppm(){
-            return true;
+            std::ofstream out("image.ppm");
+
+            for (int j = 0; j < image_height; j++) {
+                for (int i = 0; i < image_width; i++) {
+                    out << buffer[j][i].e[0] << ' ' << buffer[j][i].e[1] << ' ' << buffer[j][i].e[2] << '\n';
+                }
+            }
         }
 
 };
