@@ -6,3 +6,4 @@ Implemented multithreading by rendering the image in chunks based on the number 
 
 Created an image buffer using a vector that holds rows of colors that represent pixels. Each thread writes to the image buffer in parallel and fills the (i,j) pixel with its color.
 
+Implemented manual multithreading to render chunks of the image at a time depending on the number of available threads at the time.
